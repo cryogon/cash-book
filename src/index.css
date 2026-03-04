@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+/* ── Reset ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Design tokens ───────────────────────────────────────── */
+:root {
+  --bg:        #ece8e1;   /* app background */
+  --surface:   #e0dbd3;   /* card / sheet surface */
+  --input-bg:  #e8e4dd;   /* input fill inside white sheets */
+  --text:      #1a1a1a;   /* primary text */
+  --muted:     #888078;   /* secondary / placeholder text */
+  --divider:   rgba(0,0,0,0.12);
+
+  --blue:      #6ab4f5;   /* FAB, primary CTA */
+  --green:     #3db86a;   /* cash-in */
+  --red:       #e54545;   /* cash-out */
+
+  --radius-card:  16px;
+  --radius-input: 12px;
+  --radius-btn:   999px;  /* fully pill */
+}
+
+/* ── Base ────────────────────────────────────────────────── */
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+#root {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Utility classes used across the app ─────────────────── */
+
+/* Screen wrapper */
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+/* Page title */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-align: center;
+}
+
+/* Thin underline accent beneath title */
+.title-underline {
+  width: 6rem;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  margin: 6px auto 0;
+}
+
+/* Card */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
+}
+
+/* Input field */
+.field-input {
+  width: 100%;
+  background: var(--input-bg);
+  border: none;
+  outline: none;
+  border-radius: var(--radius-input);
+  padding: 13px 14px;
+  font-size: 0.9375rem;
+  color: var(--text);
+  font-family: inherit;
+}
+.field-input::placeholder {
+  color: var(--muted);
+}
+.field-input:focus {
+  box-shadow: 0 0 0 2px rgba(106,180,245,0.45);
+}
+
+/* Label above field */
+.field-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+/* Primary pill button */
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.btn-primary:disabled { opacity: 0.45; }
+.btn-primary:active   { transform: scale(0.97); }
+
+/* Green / Red pill buttons */
+.btn-green {
+  flex: 1;
+  padding: 15px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--green);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.btn-green:active { transform: scale(0.97); }
+
+.btn-red {
+  flex: 1;
+  padding: 15px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--red);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.btn-red:active { transform: scale(0.97); }
+
+/* Ghost pill button (cancel) */
+.btn-ghost {
+  flex: 1;
+  padding: 15px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.btn-ghost:active { transform: scale(0.97); }
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: none;
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  cursor: pointer;
+  z-index: 40;
+  transition: transform 0.12s;
+}
+.fab:active { transform: scale(0.93); }
+
+/* Bottom sheet */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet-panel {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 0 22px 36px;
+  animation: sheetUp 0.22s cubic-bezier(0.22,1,0.36,1);
+}
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 12px auto 20px;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Sheet title with underline only under the text */
+.sheet-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  display: inline-block;
+  border-bottom: 2.5px solid var(--text);
+  padding-bottom: 4px;
+  margin-bottom: 22px;
+}
