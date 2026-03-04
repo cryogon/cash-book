@@ -1,34 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BottomSheet } from './BottomSheet';
+import type { Book } from '../types';
 
-interface AddBookSheetProps {
+interface BookSheetProps {
   open: boolean;
+  /** Pass a book to edit it; omit (or pass null) to add a new one */
+  book?: Book | null;
   onClose: () => void;
-  onAdd: (title: string, description: string) => void;
+  onSave: (title: string, description: string) => void;
 }
 
-export function AddBookSheet({ open, onClose, onAdd }: AddBookSheetProps) {
+export function BookSheet({ open, book, onClose, onSave }: BookSheetProps) {
+  const isEdit = !!book;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+
+  // Sync fields whenever the sheet opens or the target book changes
+  useEffect(() => {
+    if (open) {
+      setTitle(book?.title ?? '');
+      setDescription(book?.description ?? '');
+    }
+  }, [open, book]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(title.trim(), description.trim());
-    setTitle('');
-    setDescription('');
+    onSave(title.trim(), description.trim());
     onClose();
   }
 
   function handleClose() {
-    setTitle('');
-    setDescription('');
     onClose();
   }
 
   return (
     <BottomSheet open={open} onClose={handleClose}>
-      <span className="sheet-title">Add Book</span>
+      <span className="sheet-title">{isEdit ? 'Edit Book' : 'Add Book'}</span>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
@@ -38,7 +46,6 @@ export function AddBookSheet({ open, onClose, onAdd }: AddBookSheetProps) {
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder=""
             autoFocus
           />
         </div>
@@ -49,7 +56,6 @@ export function AddBookSheet({ open, onClose, onAdd }: AddBookSheetProps) {
             className="field-input"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder=""
             rows={4}
             style={{ resize: 'none' }}
           />
@@ -61,7 +67,7 @@ export function AddBookSheet({ open, onClose, onAdd }: AddBookSheetProps) {
           disabled={!title.trim()}
           style={{ marginTop: 4 }}
         >
-          Add
+          {isEdit ? 'Save' : 'Add'}
         </button>
       </form>
     </BottomSheet>

@@ -46,6 +46,12 @@ export function useStore() {
     return book;
   }
 
+  function editBook(id: string, title: string, description: string) {
+    setBooks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, title, description } : b))
+    );
+  }
+
   function deleteBook(id: string) {
     setBooks((prev) => prev.filter((b) => b.id !== id));
     setTransactions((prev) => prev.filter((t) => t.bookId !== id));
@@ -71,6 +77,18 @@ export function useStore() {
     return tx;
   }
 
+  function editTransaction(
+    id: string,
+    title: string,
+    description: string,
+    amount: number,
+    type: 'in' | 'out'
+  ) {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, title, description, amount, type } : t))
+    );
+  }
+
   function deleteTransaction(id: string) {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   }
@@ -94,8 +112,10 @@ export function useStore() {
     books,
     transactions,
     addBook,
+    editBook,
     deleteBook,
     addTransaction,
+    editTransaction,
     deleteTransaction,
     getBookTransactions,
     getBookSummary,

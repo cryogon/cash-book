@@ -10,8 +10,7 @@ export default function App() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
   if (selectedBook) {
-    // Keep the book reference in sync in case the book gets updated
-    const book = store.books.find((b) => b.id === selectedBook.id) ?? selectedBook;
+    const book = store.books.find(b => b.id === selectedBook.id) ?? selectedBook;
     const transactions = store.getBookTransactions(book.id);
 
     return (
@@ -19,9 +18,13 @@ export default function App() {
         book={book}
         transactions={transactions}
         onBack={() => setSelectedBook(null)}
-        onAddTransaction={(title, description, amount, type) => {
-          store.addTransaction(book.id, title, description, amount, type);
-        }}
+        onAddTransaction={(title, description, amount, type) =>
+          store.addTransaction(book.id, title, description, amount, type)
+        }
+        onEditTransaction={(id, title, description, amount, type) =>
+          store.editTransaction(id, title, description, amount, type)
+        }
+        onDeleteTransaction={id => store.deleteTransaction(id)}
       />
     );
   }
@@ -30,10 +33,10 @@ export default function App() {
     <HomeScreen
       books={store.books}
       onAddBook={(title, description) => store.addBook(title, description)}
-      onSelectBook={(book) => setSelectedBook(book)}
-      getBookTransactionCount={(bookId) =>
-        store.getBookTransactions(bookId).length
-      }
+      onEditBook={(id, title, description) => store.editBook(id, title, description)}
+      onDeleteBook={id => store.deleteBook(id)}
+      onSelectBook={book => setSelectedBook(book)}
+      getBookTransactionCount={bookId => store.getBookTransactions(bookId).length}
     />
   );
 }
