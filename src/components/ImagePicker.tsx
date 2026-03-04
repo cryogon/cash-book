@@ -101,7 +101,6 @@ export function ImagePicker({ existingImageId, onPick, onRemove, previewUrl }: I
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
