@@ -9,13 +9,13 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
         name: 'CashBook',
         short_name: 'CashBook',
         description: 'Track your cash in and cash out transactions',
-        theme_color: '#6db8f7',
-        background_color: '#f0ede8',
+        theme_color: '#6ab4f5',
+        background_color: '#ece8e1',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
