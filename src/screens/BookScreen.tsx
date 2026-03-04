@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { TransactionSheet } from '../components/TransactionSheet';
 import { ActionMenu, ActionMenuDivider, ActionItem } from '../components/ActionMenu';
+import { ImageViewer } from '../components/ImageViewer';
+import { loadImage } from '../imageStore';
 import type { Book, Transaction } from '../types';
 
 interface BookScreenProps {
   book: Book;
   transactions: Transaction[];
   onBack: () => void;
-  onAddTransaction: (title: string, description: string, amount: number, type: 'in' | 'out') => void;
-  onEditTransaction: (id: string, title: string, description: string, amount: number, type: 'in' | 'out') => void;
+  onAddTransaction: (title: string, description: string, amount: number, type: 'in' | 'out', imageId?: string) => void;
+  onEditTransaction: (id: string, title: string, description: string, amount: number, type: 'in' | 'out', imageId?: string, removedImageId?: string) => void;
   onDeleteTransaction: (id: string) => void;
 }
 
@@ -22,9 +24,10 @@ export function BookScreen({
   onAddTransaction, onEditTransaction, onDeleteTransaction,
 }: BookScreenProps) {
   const [sheetInitialType, setSheetInitialType] = useState<'in' | 'out'>('in');
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [sheetOpen,   setSheetOpen]   = useState(false);
+  const [editingTx,   setEditingTx]   = useState<Transaction | null>(null);
+  const [menuOpenId,  setMenuOpenId]  = useState<string | null>(null);
+  const [viewerUrl,   setViewerUrl]   = useState<string | null>(null);
 
   const cashIn  = transactions.filter(t => t.type === 'in').reduce((s, t) => s + t.amount, 0);
   const cashOut = transactions.filter(t => t.type === 'out').reduce((s, t) => s + t.amount, 0);
@@ -42,11 +45,11 @@ export function BookScreen({
     setSheetOpen(true);
   }
 
-  function handleSave(title: string, description: string, amount: number, type: 'in' | 'out') {
+  function handleSave(title: string, description: string, amount: number, type: 'in' | 'out', imageId?: string, removedImageId?: string) {
     if (editingTx) {
-      onEditTransaction(editingTx.id, title, description, amount, type);
+      onEditTransaction(editingTx.id, title, description, amount, type, imageId, removedImageId);
     } else {
-      onAddTransaction(title, description, amount, type);
+      onAddTransaction(title, description, amount, type, imageId);
     }
     setSheetOpen(false);
     setEditingTx(null);
@@ -124,48 +127,55 @@ export function BookScreen({
                   <div
                     style={{
                       background: 'var(--surface)', borderRadius: 'var(--radius-card)',
-                      padding: '14px 18px', display: 'flex',
-                      alignItems: 'center', justifyContent: 'space-between',
+                      padding: '14px 18px',
                     }}
                   >
-                    {/* Left: title + description */}
-                    <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
-                      <div style={{
-                        fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {tx.title}
-                      </div>
-                      {tx.description && (
+                    {/* Top row: title/desc + amount + menu */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
                         <div style={{
-                          fontSize: '0.8125rem', color: 'var(--muted)', marginTop: 2,
+                          fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text)',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
-                          {tx.description}
+                          {tx.title}
                         </div>
-                      )}
+                        {tx.description && (
+                          <div style={{
+                            fontSize: '0.8125rem', color: 'var(--muted)', marginTop: 2,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {tx.description}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                        <span style={{
+                          fontWeight: 700, fontSize: '1rem', fontVariantNumeric: 'tabular-nums',
+                          color: tx.type === 'in' ? 'var(--green)' : 'var(--red)',
+                        }}>
+                          {fmt(tx.amount)}
+                        </span>
+                        <button
+                          onClick={e => toggleMenu(tx.id, e)}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1,
+                            padding: '2px 0',
+                          }}
+                          aria-label="Transaction options"
+                        >
+                          ⋯
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Right: amount + menu trigger */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                      <span style={{
-                        fontWeight: 700, fontSize: '1rem', fontVariantNumeric: 'tabular-nums',
-                        color: tx.type === 'in' ? 'var(--green)' : 'var(--red)',
-                      }}>
-                        {fmt(tx.amount)}
-                      </span>
-                      <button
-                        onClick={e => toggleMenu(tx.id, e)}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1,
-                          padding: '2px 0',
-                        }}
-                        aria-label="Transaction options"
-                      >
-                        ⋯
-                      </button>
-                    </div>
+                    {/* Image thumbnail */}
+                    {tx.imageId && (
+                      <TxImage
+                        imageId={tx.imageId}
+                        onOpen={url => setViewerUrl(url)}
+                      />
+                    )}
                   </div>
 
                   {/* Inline action menu */}
@@ -203,12 +213,51 @@ export function BookScreen({
         initialType={sheetInitialType}
         transaction={editingTx}
         onClose={() => { setSheetOpen(false); setEditingTx(null); }}
-        onSave={handleSave}
+        onSave={(title, description, amount, type, imageId, removedImageId) =>
+          handleSave(title, description, amount, type, imageId, removedImageId)
+        }
       />
 
+      {/* ── Full-screen image viewer ── */}
+      {viewerUrl && (
+        <ImageViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      )}
     </div>
   );
 }
+
+// ── TxImage ──────────────────────────────────────────────────────────────────
+// Lazy-loads a transaction's image from IndexedDB and renders a tappable thumbnail.
+
+function TxImage({ imageId, onOpen }: { imageId: string; onOpen: (url: string) => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    loadImage(imageId).then(u => {
+      objectUrl = u;
+      setUrl(u);
+    });
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [imageId]);
+
+  if (!url) return null;
+
+  return (
+    <img
+      src={url}
+      alt="Attachment"
+      onClick={e => { e.stopPropagation(); onOpen(url); }}
+      style={{
+        marginTop: 10, width: '100%', maxHeight: 140,
+        objectFit: 'cover', borderRadius: 8, display: 'block',
+        cursor: 'zoom-in',
+      }}
+    />
+  );
+}
+
+// ── SummaryRow ────────────────────────────────────────────────────────────────
 
 interface SummaryRowProps { label: string; value: number; color: string; bold?: boolean; }
 

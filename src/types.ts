@@ -13,4 +13,6 @@ export interface Transaction {
   amount: number;
   type: 'in' | 'out';
   createdAt: number;
+  /** Key into IndexedDB image store — undefined means no image */
+  imageId?: string;
 }

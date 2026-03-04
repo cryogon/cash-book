@@ -18,11 +18,11 @@ export default function App() {
         book={book}
         transactions={transactions}
         onBack={() => setSelectedBook(null)}
-        onAddTransaction={(title, description, amount, type) =>
-          store.addTransaction(book.id, title, description, amount, type)
+        onAddTransaction={(title, description, amount, type, imageId) =>
+          store.addTransaction(book.id, title, description, amount, type, imageId)
         }
-        onEditTransaction={(id, title, description, amount, type) =>
-          store.editTransaction(id, title, description, amount, type)
+        onEditTransaction={(id, title, description, amount, type, imageId, removedImageId) =>
+          store.editTransaction(id, title, description, amount, type, imageId, removedImageId)
         }
         onDeleteTransaction={id => store.deleteTransaction(id)}
       />
