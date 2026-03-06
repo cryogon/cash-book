@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Settings2 } from 'lucide-react';
 import { BookIcon } from '../components/BookIcon';
 import { BookSheet } from '../components/BookSheet';
+import { ConfirmSheet } from '../components/ConfirmSheet';
+import { SettingsSheet } from '../components/SettingsSheet';
 import { ActionMenu, ActionMenuDivider, ActionItem } from '../components/ActionMenu';
-import type { Book } from '../types';
+import type { Book, Settings } from '../types';
 
 interface HomeScreenProps {
   books: Book[];
+  settings: Settings;
+  onUpdateSettings: (patch: Partial<Settings>) => void;
   onAddBook: (title: string, description: string) => void;
   onEditBook: (id: string, title: string, description: string) => void;
   onDeleteBook: (id: string) => void;
@@ -15,43 +19,27 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({
-  books,
-  onAddBook,
-  onEditBook,
-  onDeleteBook,
-  onSelectBook,
-  getBookTransactionCount,
+  books, settings, onUpdateSettings,
+  onAddBook, onEditBook, onDeleteBook,
+  onSelectBook, getBookTransactionCount,
 }: HomeScreenProps) {
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingBook, setEditingBook] = useState<Book | null>(null);
-  // Which book's action menu is open (by id)
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [sheetOpen,     setSheetOpen]     = useState(false);
+  const [editingBook,   setEditingBook]   = useState<Book | null>(null);
+  const [deletingBook,  setDeletingBook]  = useState<Book | null>(null);
+  const [settingsOpen,  setSettingsOpen]  = useState(false);
+  const [menuOpenId,    setMenuOpenId]    = useState<string | null>(null);
 
-  function openAddSheet() {
-    setEditingBook(null);
-    setSheetOpen(true);
-  }
-
-  function openEditSheet(book: Book) {
-    setMenuOpenId(null);
-    setEditingBook(book);
-    setSheetOpen(true);
-  }
+  function openAddSheet() { setEditingBook(null); setSheetOpen(true); }
+  function openEditSheet(book: Book) { setMenuOpenId(null); setEditingBook(book); setSheetOpen(true); }
 
   function handleSave(title: string, description: string) {
-    if (editingBook) {
-      onEditBook(editingBook.id, title, description);
-    } else {
-      onAddBook(title, description);
-    }
-    setSheetOpen(false);
-    setEditingBook(null);
+    if (editingBook) onEditBook(editingBook.id, title, description);
+    else             onAddBook(title, description);
+    setSheetOpen(false); setEditingBook(null);
   }
 
-  function handleDelete(book: Book) {
-    setMenuOpenId(null);
-    onDeleteBook(book.id);
-  }
+  function requestDelete(book: Book) { setMenuOpenId(null); setDeletingBook(book); }
+  function doDelete() { if (deletingBook) onDeleteBook(deletingBook.id); setDeletingBook(null); }
 
   function toggleMenu(id: string, e: React.MouseEvent) {
     e.stopPropagation();
@@ -61,9 +49,22 @@ export function HomeScreen({
   return (
     <div className="screen" onClick={() => setMenuOpenId(null)}>
       {/* ── Header ── */}
-      <div style={{ paddingTop: 52, paddingBottom: 8, textAlign: 'center' }}>
+      <div style={{ paddingTop: 52, paddingBottom: 8, textAlign: 'center', position: 'relative' }}>
         <h1 className="page-title">Books</h1>
         <div className="title-underline" />
+
+        {/* Settings gear */}
+        <button
+          onClick={e => { e.stopPropagation(); setSettingsOpen(true); }}
+          style={{
+            position: 'absolute', top: 52, right: 16,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--muted)', display: 'flex', padding: 4,
+          }}
+          aria-label="Settings"
+        >
+          <Settings2 size={20} />
+        </button>
       </div>
 
       {/* ── Content ── */}
@@ -71,8 +72,7 @@ export function HomeScreen({
         {books.length === 0 ? (
           <div style={{
             display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            minHeight: '60vh',
+            alignItems: 'center', justifyContent: 'center', minHeight: '60vh',
           }}>
             <BookIcon style={{ width: 160, marginBottom: 20, opacity: 0.9 }} />
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem', textAlign: 'center', lineHeight: 1.6 }}>
@@ -82,30 +82,23 @@ export function HomeScreen({
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-            {books.map((book) => {
-              const count = getBookTransactionCount(book.id);
+            {books.map(book => {
+              const count    = getBookTransactionCount(book.id);
               const menuOpen = menuOpenId === book.id;
               return (
-                <div
-                  key={book.id}
-                  style={{ position: 'relative' }}
-                >
-                  {/* Card */}
+                <div key={book.id} style={{ position: 'relative' }}>
                   <div
                     onClick={() => { setMenuOpenId(null); onSelectBook(book); }}
                     style={{
-                      display: 'block', width: '100%', textAlign: 'left',
+                      width: '100%', textAlign: 'left',
                       background: 'var(--surface)', borderRadius: 'var(--radius-card)',
                       padding: '16px 18px', cursor: 'pointer',
-                      transition: 'transform 0.1s',
                     }}
                   >
-                    {/* Title row */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', flex: 1 }}>
                         {book.title}
                       </div>
-                      {/* ⋯ menu trigger */}
                       <button
                         onClick={e => toggleMenu(book.id, e)}
                         style={{
@@ -114,21 +107,15 @@ export function HomeScreen({
                           fontSize: '1.2rem', lineHeight: 1, marginTop: -2,
                         }}
                         aria-label="Book options"
-                      >
-                        ⋯
-                      </button>
+                      >⋯</button>
                     </div>
-
                     {book.description && (
                       <div style={{
                         fontSize: '0.875rem', color: 'var(--muted)', marginTop: 4, marginBottom: 10,
                         display: '-webkit-box', WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>
-                        {book.description}
-                      </div>
+                      }}>{book.description}</div>
                     )}
-
                     <span style={{
                       display: 'inline-block', marginTop: book.description ? 0 : 10,
                       fontSize: '0.75rem', fontWeight: 600,
@@ -139,13 +126,12 @@ export function HomeScreen({
                     </span>
                   </div>
 
-                  {/* Inline action menu */}
                   {menuOpen && (
                     <div onClick={e => e.stopPropagation()}>
                       <ActionMenu top={8} right={8}>
                         <ActionItem icon={<Pencil size={15} />} label="Edit"   onClick={() => openEditSheet(book)} />
                         <ActionMenuDivider />
-                        <ActionItem icon={<Trash2 size={15} />} label="Delete" danger onClick={() => handleDelete(book)} />
+                        <ActionItem icon={<Trash2 size={15} />} label="Delete" danger onClick={() => requestDelete(book)} />
                       </ActionMenu>
                     </div>
                   )}
@@ -164,6 +150,7 @@ export function HomeScreen({
         </svg>
       </button>
 
+      {/* ── Sheets ── */}
       <BookSheet
         open={sheetOpen}
         book={editingBook}
@@ -171,8 +158,20 @@ export function HomeScreen({
         onSave={handleSave}
       />
 
+      <ConfirmSheet
+        open={deletingBook !== null}
+        title="Delete book?"
+        message={deletingBook ? `"${deletingBook.title}" and all its transactions will be permanently deleted.` : ''}
+        onConfirm={doDelete}
+        onCancel={() => setDeletingBook(null)}
+      />
+
+      <SettingsSheet
+        open={settingsOpen}
+        settings={settings}
+        onClose={() => setSettingsOpen(false)}
+        onSave={onUpdateSettings}
+      />
     </div>
   );
 }
-
-

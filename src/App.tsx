@@ -17,12 +17,13 @@ export default function App() {
       <BookScreen
         book={book}
         transactions={transactions}
+        settings={store.settings}
         onBack={() => setSelectedBook(null)}
-        onAddTransaction={(title, description, amount, type, imageId) =>
-          store.addTransaction(book.id, title, description, amount, type, imageId)
+        onAddTransaction={(title, description, amount, type, date, tags, imageId) =>
+          store.addTransaction(book.id, title, description, amount, type, date, tags, imageId)
         }
-        onEditTransaction={(id, title, description, amount, type, imageId, removedImageId) =>
-          store.editTransaction(id, title, description, amount, type, imageId, removedImageId)
+        onEditTransaction={(id, title, description, amount, type, date, tags, imageId, removedImageId) =>
+          store.editTransaction(id, title, description, amount, type, date, tags, imageId, removedImageId)
         }
         onDeleteTransaction={id => store.deleteTransaction(id)}
       />
@@ -32,6 +33,8 @@ export default function App() {
   return (
     <HomeScreen
       books={store.books}
+      settings={store.settings}
+      onUpdateSettings={store.updateSettings}
       onAddBook={(title, description) => store.addBook(title, description)}
       onEditBook={(id, title, description) => store.editBook(id, title, description)}
       onDeleteBook={id => store.deleteBook(id)}
